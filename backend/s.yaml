@@ -1,0 +1,45 @@
+edition: 3.0.0
+name: memoryagent-backend
+access: default
+
+vars:
+  region: us-east-1
+
+resources:
+  memoryagent-backend:
+    component: fc3
+    props:
+      region: ${vars.region}
+      functionName: memoryagent-backend
+      description: Backend MemoryAgent - chat + grafo de memoria via Qwen Cloud
+      runtime: python3.10
+      code: ./
+      handler: handler.handler
+      logConfig:
+        enableInstanceMetrics: true
+        enableRequestMetrics: true
+        logBeginRule: DefaultRegex
+        logstore: default-logs
+        project: serverless-us-east-1-3c8148de-a54f-559c-8fbb-208ad2934d10
+      cpu: 0.5
+      memorySize: 512
+      diskSize: 512
+      timeout: 60
+      environmentVariables:
+        QWEN_API_KEY: ${env(QWEN_API_KEY)}
+        QWEN_BASE_URL: ${env(QWEN_BASE_URL)}
+        QWEN_MODEL: ${env(QWEN_MODEL)}
+        TABLESTORE_ENDPOINT: ${env(TABLESTORE_ENDPOINT)}
+        TABLESTORE_INSTANCE: ${env(TABLESTORE_INSTANCE)}
+        TABLESTORE_ACCESS_KEY_ID: ${env(TABLESTORE_ACCESS_KEY_ID)}
+        TABLESTORE_ACCESS_KEY_SECRET: ${env(TABLESTORE_ACCESS_KEY_SECRET)}
+      triggers:
+        - triggerName: httpTrigger
+          triggerType: http
+          triggerConfig:
+            authType: anonymous
+            methods:
+              - GET
+              - POST
+              - DELETE
+              - OPTIONS

@@ -1,0 +1,6 @@
+flask==3.0.3
+flask-cors==4.0.1
+requests==2.32.3
+networkx==3.4.2
+python-dotenv==1.0.1
+tablestore==6.4.8
