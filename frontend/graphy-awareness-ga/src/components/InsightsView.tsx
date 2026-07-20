@@ -86,9 +86,9 @@ export default function InsightsView() {
   }
 
   return (
-    <div className="flex h-full w-full gap-4 p-4">
+    <div className="flex h-full min-h-0 w-full gap-4 p-4">
       <div
-        className="flex h-full w-1/2 flex-col rounded-2xl border border-border-subtle bg-surface p-3.5"
+        className="flex h-full min-h-0 w-1/2 flex-col rounded-2xl border border-border-subtle bg-surface p-3.5"
         style={{ boxShadow: "var(--shadow-sm)" }}
       >
         <div className="mb-2 flex items-start justify-between gap-3 px-1">
@@ -108,13 +108,13 @@ export default function InsightsView() {
             {isClearing ? "Clearing…" : "Clear graph"}
           </button>
         </div>
-        <div className="flex-1">
+        <div className="min-h-0 flex-1">
           <GraphCanvas data={graph} highlightLabels={highlightLabels} />
         </div>
       </div>
 
       <div
-        className="flex h-full w-1/2 flex-col rounded-2xl border border-border-subtle bg-surface p-4"
+        className="flex h-full min-h-0 w-1/2 flex-col rounded-2xl border border-border-subtle bg-surface p-4"
         style={{ boxShadow: "var(--shadow-sm)" }}
       >
         <div className="mb-1 flex items-center justify-between gap-3">
@@ -134,7 +134,7 @@ export default function InsightsView() {
           </button>
         </div>
 
-        <div className="mt-3 flex-1 space-y-3 overflow-y-auto">
+        <div className="mt-3 min-h-0 flex-1 space-y-3 overflow-y-auto">
           {status === "loading" && (
             <>
               <p className="mb-1 text-xs text-foreground/40">Reasoning over the graph…</p>

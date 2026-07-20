@@ -233,10 +233,10 @@ export default function GraphCanvas({ data, emptyMessage, highlightLabels }: Gra
   );
 
   return (
-    <div className="relative flex h-full w-full flex-col">
+    <div className="relative flex h-full min-h-0 w-full flex-col">
       <div
         ref={containerRef}
-        className="relative flex-1 overflow-hidden rounded-xl border border-border-subtle bg-surface-muted touch-none transition-shadow duration-200 ease-out"
+        className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-border-subtle bg-surface-muted touch-none transition-shadow duration-200 ease-out"
         style={{ boxShadow: "inset 0 1px 3px rgba(0,0,0,0.03)" }}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}

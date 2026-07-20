@@ -76,9 +76,9 @@ export default function ChatView() {
   }
 
   return (
-    <div className="flex h-full w-full gap-4 p-4">
+    <div className="flex h-full min-h-0 w-full gap-4 p-4">
       <div
-        className="flex h-full w-1/2 flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface"
+        className="flex h-full min-h-0 w-1/2 flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface"
         style={{ boxShadow: "var(--shadow-sm)" }}
       >
         <div className="border-b border-border-subtle px-4 py-3.5">
@@ -152,14 +152,14 @@ export default function ChatView() {
       </div>
 
       <div
-        className="flex h-full w-1/2 flex-col rounded-2xl border border-border-subtle bg-surface p-3.5"
+        className="flex h-full min-h-0 w-1/2 flex-col rounded-2xl border border-border-subtle bg-surface p-3.5"
         style={{ boxShadow: "var(--shadow-sm)" }}
       >
         <div className="mb-2 px-1">
           <h2 className="font-display text-[15px] font-medium">Live memory graph</h2>
           <p className="text-xs text-foreground/50">Updates in real time after each reply.</p>
         </div>
-        <div className="flex-1">
+        <div className="min-h-0 flex-1">
           <GraphCanvas data={graph} />
         </div>
       </div>

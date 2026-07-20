@@ -42,7 +42,7 @@ function Dashboard() {
 
   return (
     <div
-      className="flex h-screen w-full flex-1 bg-background"
+      className="flex h-screen w-full flex-1 overflow-hidden bg-background"
       style={{
         backgroundImage:
           "radial-gradient(680px circle at 88% 8%, rgba(168,216,192,0.16), transparent 60%), radial-gradient(520px circle at 6% 96%, rgba(47,182,116,0.08), transparent 55%)",
@@ -56,7 +56,7 @@ function Dashboard() {
         username={displayUsername(auth.user?.profile)}
         onSignOut={handleSignOut}
       />
-      <main className="min-w-0 flex-1">
+      <main className="min-h-0 min-w-0 flex-1 overflow-hidden">
         {active === "chat" ? <ChatView /> : <InsightsView />}
       </main>
     </div>
