@@ -23,7 +23,7 @@ Implementation: `graph_store.py` builds an in-memory `networkx.MultiDiGraph` per
 ### The three memory pillars
 
 1. **Efficient storage & retrieval** — nodes/edges are separate rows in Tablestore (`user_id` partition key), not a JSON blob, so writes are atomic per-node and reads are a single partition range-scan. `relevant_context()` ranks nodes by `intensity * 0.6 + recency * 0.3 + confidence * 0.1` before injecting them into the LLM prompt, instead of dumping the whole graph.
-2. **Forgetting** — `apply_decay()` runs on every request: `intensity`/`confidence` decay exponentially (30-day half-life) based on `last_seen`. Nodes below an intensity threshold silently drop out of context. Contradictions are resolved explicitly via a `superseded_by` edge (the old node's intensity is zeroed) rather than left to average out.
+2. **Forgetting** — two mechanisms, automatic and explicit. `apply_decay()` runs on every request: `intensity`/`confidence` decay exponentially (30-day half-life) based on `last_seen`. Nodes below an intensity threshold silently drop out of context. On top of that, `GraphStore.clear()` gives the user an explicit reset: `DELETE /graph` deletes every node/edge row for that `user_id` from Tablestore, surfaced in the UI as the "Clear graph" button on the Insights view.
 3. **Recall under limited context** — the chat prompt only ever receives the top-k ranked nodes (`relevant_context(top_k=12)`), not the full graph, so the context footprint stays bounded as memory grows.
 
 ### Why the backend is built the way it is (Function Compute constraints)
@@ -42,6 +42,7 @@ Several decisions exist specifically because of how FC's Python runtime behaves 
 |---|---|---|
 | `/chat` | POST | `{user_id, message, history}` → SSE stream of `delta` chunks, then `{done, memory}`. Also runs extraction (forced tool-call) and writes the graph. |
 | `/graph` | GET | `?user_id=` → full graph as `{nodes, edges}` for visualization. |
+| `/graph` | DELETE | `?user_id=` → deletes every node/edge row for that user (explicit forgetting / reset). |
 | `/recommend` | GET | `?user_id=` → LLM-generated recommendations, each with `reasoning` that cites the specific nodes/edges that justify it. |
 | `/health` | GET | liveness check. |
 
@@ -64,7 +65,7 @@ pip install -r requirements.txt --target vendor \
 s deploy -y
 ```
 
-`s.yaml` targets `runtime: python3.10`, `handler: handler.app` is unused — the real entry point is the `handler(event, context)` function described above.
+`s.yaml` targets `runtime: python3.10`, `handler: handler.app` is unused — the real entry point is the `handler(event, context)` function described above. The `httpTrigger` allows `GET`, `POST`, `DELETE`, `OPTIONS`; adding a new HTTP method to a route requires updating that list before `s deploy`, or FC returns 405 even if the Flask route exists.
 
 ---
 
@@ -74,7 +75,7 @@ Next.js 16 (App Router, Turbopack) + React 19, deployed to Vercel.
 
 - **Sidebar** — two views, `Chat` and `Insights`; collapses to an icon rail on selection, with a manual expand/collapse toggle.
 - **Chat view** — conversation on the left, the user's live memory graph on the right; the graph refetches and re-renders after every reply.
-- **Insights view** — full graph + AI-generated recommendation cards; hovering a card highlights the graph nodes it cites (`related_labels` match).
+- **Insights view** — full graph + AI-generated recommendation cards; hovering a card highlights the graph nodes it cites (`related_labels` match). A "Clear graph" button (disabled when the graph is already empty, confirm-before-delete) calls `DELETE /graph` and refetches.
 - **`GraphCanvas`** — a hand-rolled force-directed graph (`d3-force` + SVG, no charting library) with drag, zoom/pan, and a click-to-inspect tooltip (label, evidence, confidence, intensity). Chosen over a graph-viz package to avoid dependency-compatibility risk on a brand-new Next/React version.
 - **Auth** — AWS Cognito (Hosted UI, Authorization Code + PKCE) via `react-oidc-context`. `user_id` is the Cognito `sub` claim, not a generated id — this is what lets a second session, on any device, prove real cross-session memory recall in the demo. `AuthGate` blocks the dashboard until signed in; sign-out clears both the local session and the Cognito Hosted UI session.
 - **API proxy** — the client never talks to Function Compute directly. `app/api/{chat,graph,recommend}/route.ts` verify the Cognito access token server-side (`jose` against the pool's JWKS) and derive `user_id` from the verified `sub` — the client can't spoof another user's id even by editing requests in devtools. The FC URL lives in the server-only `API_BASE_URL` env var and never reaches the browser (verified: zero client requests to `*.fcapp.run`, string absent from every served JS bundle).
