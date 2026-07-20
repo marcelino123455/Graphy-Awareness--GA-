@@ -1,6 +1,6 @@
-"""Genera recomendaciones personalizadas a partir del grafo de memoria de un usuario.
-Demuestra el valor de negocio del esquema: conecta necesidades/miedos abstractos con
-entidades concretas via tool calling forzado contra Qwen.
+"""Generates personalized recommendations from a user's memory graph.
+Demonstrates the schema's business value: connects abstract needs/fears to
+concrete entities via forced tool calling against Qwen.
 """
 import json
 
@@ -11,7 +11,7 @@ _RECOMMEND_TOOL = {
     "type": "function",
     "function": {
         "name": "record_recommendations",
-        "description": "Registra recomendaciones personalizadas basadas en el grafo de memoria del usuario.",
+        "description": "Records personalized recommendations based on the user's memory graph.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -20,10 +20,10 @@ _RECOMMEND_TOOL = {
                     "items": {
                         "type": "object",
                         "properties": {
-                            "title": {"type": "string", "description": "Nombre corto de la recomendacion"},
-                            "description": {"type": "string", "description": "1-2 frases, que es y por que le sirve"},
-                            "reasoning": {"type": "string", "description": "Explica que nodos/aristas del grafo justifican esta recomendacion"},
-                            "related_labels": {"type": "array", "items": {"type": "string"}, "description": "Labels de los nodos del grafo relacionados"},
+                            "title": {"type": "string", "description": "Short name of the recommendation"},
+                            "description": {"type": "string", "description": "1-2 sentences: what it is and why it helps"},
+                            "reasoning": {"type": "string", "description": "Explains which graph nodes/edges justify this recommendation"},
+                            "related_labels": {"type": "array", "items": {"type": "string"}, "description": "Labels of the related graph nodes"},
                             "category": {"type": "string", "enum": ["product", "activity", "content", "service"]},
                         },
                         "required": ["title", "description", "reasoning", "category"],
@@ -36,13 +36,13 @@ _RECOMMEND_TOOL = {
 }
 
 _SYSTEM_PROMPT = (
-    "Eres un motor de recomendaciones que razona sobre un grafo de memoria psicologica/de "
-    "preferencias de un usuario. El grafo tiene nodos tipados (Need, Fear, Preference, Trait, "
-    "Fact, Entity) y aristas que los conectan (satisfies, causes, relates_to, etc). "
-    "Genera 3 a 5 recomendaciones concretas (productos, actividades, contenido o servicios) que "
-    "conecten explicitamente una necesidad o miedo abstracto con algo accionable. Cada "
-    "recomendacion debe justificar su razonamiento citando los nodos/aristas especificos del "
-    "grafo que la sustentan. No inventes datos que no esten en el grafo."
+    "You are a recommendation engine that reasons over a user's psychological/preference "
+    "memory graph. The graph has typed nodes (Need, Fear, Preference, Trait, "
+    "Fact, Entity) and edges connecting them (satisfies, causes, relates_to, etc). "
+    "Generate 3 to 5 concrete recommendations (products, activities, content, or services) that "
+    "explicitly connect an abstract need or fear to something actionable. Each "
+    "recommendation must justify its reasoning by citing the specific graph nodes/edges "
+    "that support it. Do not invent data that is not in the graph. Respond in English."
 )
 
 
@@ -54,13 +54,13 @@ def _graph_summary(store: GraphStore) -> str:
         domain = f" [{attrs.get('domain')}]" if attrs.get("domain") else ""
         lines.append(f"- ({attrs.get('type')}){domain} \"{attrs.get('label')}\" (id={node_id})")
 
-    lines.append("\nRelaciones:")
+    lines.append("\nRelationships:")
     for u, v, attrs in store.graph.edges(data=True):
         u_label = store.graph.nodes[u].get("label", u)
         v_label = store.graph.nodes[v].get("label", v)
         lines.append(f"- \"{u_label}\" -{attrs.get('type')}-> \"{v_label}\"")
 
-    return "\n".join(lines) if lines else "(grafo vacio, sin memorias todavia)"
+    return "\n".join(lines) if lines else "(empty graph, no memories yet)"
 
 
 def generate_recommendations(user_id: str) -> list[dict]:
@@ -69,13 +69,13 @@ def generate_recommendations(user_id: str) -> list[dict]:
     store.save()
 
     summary = _graph_summary(store)
-    if "vacio" in summary:
+    if "empty graph" in summary:
         return []
 
     completion = chat_completion(
         messages=[
             {"role": "system", "content": _SYSTEM_PROMPT},
-            {"role": "user", "content": f"Grafo de memoria del usuario:\n\n{summary}"},
+            {"role": "user", "content": f"User's memory graph:\n\n{summary}"},
         ],
         tools=[_RECOMMEND_TOOL],
         tool_choice={"type": "function", "function": {"name": "record_recommendations"}},

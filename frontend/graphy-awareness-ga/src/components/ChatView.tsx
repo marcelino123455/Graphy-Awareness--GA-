@@ -78,7 +78,7 @@ export default function ChatView() {
   return (
     <div className="flex h-full w-full gap-4 p-4">
       <div
-        className="flex h-full w-1/2 flex-col rounded-2xl border border-border-subtle bg-surface"
+        className="flex h-full w-1/2 flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface"
         style={{ boxShadow: "var(--shadow-sm)" }}
       >
         <div className="border-b border-border-subtle px-4 py-3.5">
@@ -88,7 +88,7 @@ export default function ChatView() {
           </p>
         </div>
 
-        <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+        <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
           {messages.length === 0 && (
             <p className="animate-rise-in text-sm text-foreground/40">
               Say hello — tell the agent something about yourself and watch the graph grow.
